@@ -173,14 +173,18 @@ func (e *Editor) prompt(initialValue string, config *PromptConfig) (interface{},
 		return "", err
 	}
 
-	// check is input editor exist
+	// resolve the editor for this prompt: the configured one wins over the
+	// package default. Assigning to the package-level `editor` here would leak
+	// this prompt's choice into every later prompt in the process and race with
+	// any prompt running concurrently.
+	effectiveEditor := editor
 	if e.Editor != "" {
-		editor = e.Editor
+		effectiveEditor = e.Editor
 	}
 
 	stdio := e.Stdio()
 
-	args, err := shellquote.Split(editor)
+	args, err := shellquote.Split(effectiveEditor)
 	if err != nil {
 		return "", err
 	}

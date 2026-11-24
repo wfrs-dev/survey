@@ -237,6 +237,80 @@ func TestEditorPrompt(t *testing.T) {
 	}
 }
 
+// The configured editor arguments must reach the command: survey appends the
+// temp file after them, so dropping the args silently changes what the editor
+// receives.
+func TestEditorForwardsConfiguredArgs(t *testing.T) {
+	// $1 is the configured sentinel, $2 the temp file survey appended.
+	script := fakeEditor(t, `printf '%s' "$1" > "$2"`)
+
+	RunPromptTest(t, PromptTest{
+		"Editor prompt forwards configured editor args",
+		&Editor{Editor: script + " --sentinel", Message: "Edit git commit message"},
+		func(c expectConsole) {
+			c.ExpectString("Edit git commit message [Enter to launch editor]")
+			c.SendLine("")
+			c.ExpectEOF()
+		},
+		"--sentinel",
+	})
+}
+
+// AppendDefault writes the default into the temp file before launching the
+// editor, so an editor that saves without changes returns the default.
+func TestEditorAppendDefaultWritesDefault(t *testing.T) {
+	script := fakeEditor(t, `:`)
+
+	RunPromptTest(t, PromptTest{
+		"Editor prompt with AppendDefault keeps the written default",
+		&Editor{
+			Editor:        script,
+			Message:       "Edit git commit message",
+			Default:       "No comment",
+			AppendDefault: true,
+		},
+		func(c expectConsole) {
+			c.ExpectString("Edit git commit message (No comment) [Enter to launch editor]")
+			c.SendLine("")
+			c.ExpectEOF()
+		},
+		"No comment",
+	})
+}
+
+// A prompt configured with its own editor must not change the package default
+// that every other prompt falls back to. Mutating it leaks the choice into
+// later prompts and races with prompts running concurrently.
+func TestEditorDoesNotMutateDefaultEditor(t *testing.T) {
+	before := editor
+	script := fakeEditor(t, `:`)
+
+	var answer string
+	RunTest(t,
+		func(c expectConsole) {
+			c.ExpectString("Edit git commit message [Enter to launch editor]")
+			c.SendLine("")
+			c.ExpectEOF()
+		},
+		func(stdio terminal.Stdio) error {
+			prompt := &Editor{Editor: script, Message: "Edit git commit message"}
+			prompt.WithStdio(stdio)
+
+			val, err := prompt.Prompt(defaultPromptConfig())
+			answer, _ = val.(string)
+
+			return err
+		},
+	)
+
+	if answer != "" {
+		t.Errorf("answer = %q, want empty", answer)
+	}
+	if editor != before {
+		t.Errorf("package default editor mutated to %q, want %q", editor, before)
+	}
+}
+
 // fakeEditor writes a deterministic stand-in for a real editor and returns its
 // path. Like a real editor invocation, the script receives the file survey
 // created as its last argument, so bodies can operate on "$file" regardless of
