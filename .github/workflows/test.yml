@@ -14,18 +14,38 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, macos-latest, windows-latest]
+        platform: [ubuntu-latest, windows-latest]
         # 1.21 is the minimum required by go.mod; "stable" follows the current
         # release instead of going stale like a pinned patch version would.
         go: ["1.21", "stable"]
-        exclude:
-          # Go older than 1.24 links Mach-O binaries without an LC_UUID load
-          # command and the current macOS runner image aborts them on load:
-          #   dyld: missing LC_UUID load command / signal: abort trap
-          # (go.dev/doc/go1.24, golang/go#68678). The 1.21 compatibility leg
-          # runs on Linux and Windows; macOS is covered by the stable leg.
-          - platform: macos-latest
-            go: "1.21"
+        # macOS is intentionally out of the matrix for now. Two separate
+        # problems, both about the runner rather than about this code:
+        #
+        #   1. Go older than 1.24 links Mach-O binaries without an LC_UUID load
+        #      command, and the current macOS runner image aborts them on load
+        #      ("dyld: missing LC_UUID load command" / "signal: abort trap").
+        #      macOS therefore cannot carry the older-Go leg at all;
+        #      see go.dev/doc/go1.24 and golang/go#68678.
+        #   2. The macOS jobs on this repository are frequently cancelled after
+        #      roughly fifteen minutes without ever starting, for lack of runner
+        #      capacity. A cancelled job is reported as a failing check, which
+        #      makes a green commit look broken.
+        #
+        # Put macos-latest back into `platform` once a real macOS runner is
+        # reliably available, and drop this comment then.
+        #
+        # In the meantime, verify on a Mac by hand:
+        #
+        #   go test -count=1 ./...
+        #   go test -race -count=1 ./...
+        #   go vet ./... && test -z "$(gofmt -l .)"
+        #   for f in examples/*.go tests/*.go; do go build -o /dev/null "$f"; done
+        #
+        # Those example and manual-test programs are //go:build ignore mains, so
+        # neither `go vet ./...` nor `go test ./...` looks at them. To check the
+        # other Go version, let the toolchain fetch it, for example:
+        #
+        #   GOTOOLCHAIN=go1.23.12 go test -count=1 ./...
 
     runs-on: ${{ matrix.platform }}
 
