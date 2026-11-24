@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/wfrs-dev/survey/v2/core"
@@ -104,23 +103,35 @@ func TestEditorRender(t *testing.T) {
 }
 
 func TestEditorPrompt(t *testing.T) {
-	if _, err := exec.LookPath("vi"); err != nil {
-		t.Skip("warning: vi not found in PATH")
-	}
+	// The editor is a script, not a real `vi`. Depending on the system `vi` may
+	// be vim, neovim or a wrapper, and driving it over the pty depends on its
+	// screen updates and timing: that made this test hang instead of fail. What
+	// the prompt itself owns is narrower and fully observable here: it writes the
+	// initial value, runs the configured command with the temp file appended as
+	// its last argument, and returns whatever the editor left in that file.
+	const (
+		// stands in for a user typing content and saving
+		writeAnswer = `printf '%s\n' 'Add editor prompt tests' > "$file"`
+		// stands in for quitting the editor without modifying the file
+		leaveFile = `:`
+		// stands in for deleting every line before saving
+		emptyFile = `: > "$file"`
+	)
+
+	editorWithAnswer := fakeEditor(t, writeAnswer)
+	editorLeavingFile := fakeEditor(t, leaveFile)
+	editorEmptyingFile := fakeEditor(t, emptyFile)
 
 	tests := []PromptTest{
 		{
 			"Test Editor prompt interaction",
 			&Editor{
-				Editor:  "vi",
+				Editor:  editorWithAnswer,
 				Message: "Edit git commit message",
 			},
 			func(c expectConsole) {
 				c.ExpectString("Edit git commit message [Enter to launch editor]")
 				c.SendLine("")
-				time.Sleep(time.Millisecond)
-				c.Send("ccAdd editor prompt tests\x1b")
-				c.SendLine(":wq!")
 				c.ExpectEOF()
 			},
 			"Add editor prompt tests\n",
@@ -128,15 +139,13 @@ func TestEditorPrompt(t *testing.T) {
 		{
 			"Test Editor prompt interaction with default",
 			&Editor{
-				Editor:  "vi",
+				Editor:  editorLeavingFile,
 				Message: "Edit git commit message",
 				Default: "No comment",
 			},
 			func(c expectConsole) {
 				c.ExpectString("Edit git commit message (No comment) [Enter to launch editor]")
 				c.SendLine("")
-				time.Sleep(time.Millisecond)
-				c.SendLine(":q!")
 				c.ExpectEOF()
 			},
 			"No comment",
@@ -144,16 +153,13 @@ func TestEditorPrompt(t *testing.T) {
 		{
 			"Test Editor prompt interaction overriding default",
 			&Editor{
-				Editor:  "vi",
+				Editor:  editorWithAnswer,
 				Message: "Edit git commit message",
 				Default: "No comment",
 			},
 			func(c expectConsole) {
 				c.ExpectString("Edit git commit message (No comment) [Enter to launch editor]")
 				c.SendLine("")
-				time.Sleep(time.Millisecond)
-				c.Send("ccAdd editor prompt tests\x1b")
-				c.SendLine(":wq!")
 				c.ExpectEOF()
 			},
 			"Add editor prompt tests\n",
@@ -161,7 +167,7 @@ func TestEditorPrompt(t *testing.T) {
 		{
 			"Test Editor prompt interaction hiding default",
 			&Editor{
-				Editor:      "vi",
+				Editor:      editorLeavingFile,
 				Message:     "Edit git commit message",
 				Default:     "No comment",
 				HideDefault: true,
@@ -169,8 +175,6 @@ func TestEditorPrompt(t *testing.T) {
 			func(c expectConsole) {
 				c.ExpectString("Edit git commit message [Enter to launch editor]")
 				c.SendLine("")
-				time.Sleep(time.Millisecond)
-				c.SendLine(":q!")
 				c.ExpectEOF()
 			},
 			"No comment",
@@ -178,7 +182,7 @@ func TestEditorPrompt(t *testing.T) {
 		{
 			"Test Editor prompt interaction and prompt for help",
 			&Editor{
-				Editor:  "vi",
+				Editor:  editorWithAnswer,
 				Message: "Edit git commit message",
 				Help:    "Describe your git commit",
 			},
@@ -192,9 +196,6 @@ func TestEditorPrompt(t *testing.T) {
 				c.SendLine("?")
 				c.ExpectString("Describe your git commit")
 				c.SendLine("")
-				time.Sleep(time.Millisecond)
-				c.Send("ccAdd editor prompt tests\x1b")
-				c.SendLine(":wq!")
 				c.ExpectEOF()
 			},
 			"Add editor prompt tests\n",
@@ -202,7 +203,7 @@ func TestEditorPrompt(t *testing.T) {
 		{
 			"Test Editor prompt interaction with default and append default",
 			&Editor{
-				Editor:        "vi",
+				Editor:        editorEmptyingFile,
 				Message:       "Edit git commit message",
 				Default:       "No comment",
 				AppendDefault: true,
@@ -210,9 +211,6 @@ func TestEditorPrompt(t *testing.T) {
 			func(c expectConsole) {
 				c.ExpectString("Edit git commit message (No comment) [Enter to launch editor]")
 				c.SendLine("")
-				c.ExpectString("No comment")
-				c.SendLine("dd")
-				c.SendLine(":wq!")
 				c.ExpectEOF()
 			},
 			"",
@@ -220,15 +218,12 @@ func TestEditorPrompt(t *testing.T) {
 		{
 			"Test Editor prompt interaction with editor args",
 			&Editor{
-				Editor:  "vi --",
+				Editor:  editorWithAnswer + " --",
 				Message: "Edit git commit message",
 			},
 			func(c expectConsole) {
 				c.ExpectString("Edit git commit message [Enter to launch editor]")
 				c.SendLine("")
-				time.Sleep(time.Millisecond)
-				c.Send("ccAdd editor prompt tests\x1b")
-				c.SendLine(":wq!")
 				c.ExpectEOF()
 			},
 			"Add editor prompt tests\n",
@@ -240,4 +235,21 @@ func TestEditorPrompt(t *testing.T) {
 			RunPromptTest(t, test)
 		})
 	}
+}
+
+// fakeEditor writes a deterministic stand-in for a real editor and returns its
+// path. Like a real editor invocation, the script receives the file survey
+// created as its last argument, so bodies can operate on "$file" regardless of
+// how many extra arguments the prompt config passed.
+func fakeEditor(t *testing.T, body string) string {
+	t.Helper()
+
+	script := "#!/bin/sh\nset -e\nfile=\nfor arg in \"$@\"; do file=\"$arg\"; done\n" + body + "\n"
+
+	path := filepath.Join(t.TempDir(), "fake-editor.sh")
+	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
+		t.Fatalf("failed to write fake editor script: %v", err)
+	}
+
+	return path
 }
