@@ -35,7 +35,7 @@ var MultilineQuestionTemplate = `
   {{- color "cyan"}}[Enter 2 empty lines to finish]{{color "reset"}}
 {{- end}}`
 
-func (i *Multiline) Prompt(config *PromptConfig) (interface{}, error) {
+func (i *Multiline) Prompt(config *PromptConfig) (any, error) {
 	// render the template
 	err := i.Render(
 		MultilineQuestionTemplate,
@@ -99,7 +99,7 @@ func (i *Multiline) Prompt(config *PromptConfig) (interface{}, error) {
 	return val, err
 }
 
-func (i *Multiline) Cleanup(config *PromptConfig, val interface{}) error {
+func (i *Multiline) Cleanup(config *PromptConfig, val any) error {
 	return i.Render(
 		MultilineQuestionTemplate,
 		MultilineTemplateData{

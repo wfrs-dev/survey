@@ -10,11 +10,11 @@ import (
 type TestTableEntry struct {
 	Name     string
 	Prompt   survey.Prompt
-	Value    interface{}
-	Validate func(interface{}) error
+	Value    any
+	Validate func(any) error
 }
 
-func formatAnswer(ans interface{}) {
+func formatAnswer(ans any) {
 	// show the answer to the user
 	fmt.Printf("Answered %v.\n", reflect.ValueOf(ans).Elem())
 	fmt.Println("---------------------")

@@ -46,7 +46,7 @@ var goodTable = []TestUtil.TestTableEntry{
 			Default:       `this is the default value. change it to something containing "invalid" (in vi type "ccinvalid<Esc>ZZ")`,
 		},
 		Value: &answer,
-		Validate: func(v interface{}) error {
+		Validate: func(v any) error {
 			s := v.(string)
 			if strings.Contains(s, "invalid") {
 				return fmt.Errorf(`this is the error message. change the input to something not containing "invalid"`)

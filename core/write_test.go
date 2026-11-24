@@ -252,7 +252,7 @@ func TestWriteAnswer_optionAnswer(t *testing.T) {
 
 func TestWriteAnswer_canMutateMap(t *testing.T) {
 	// the map to hold the answer
-	ptr := make(map[string]interface{})
+	ptr := make(map[string]any)
 
 	// write a value to an existing field
 	err := WriteAnswer(&ptr, "name", "world")
@@ -271,7 +271,7 @@ func TestWriteAnswer_canMutateMap(t *testing.T) {
 }
 
 func TestWrite_returnsErrorIfInvalidMapType(t *testing.T) {
-	// try to copy a value to a non map[string]interface{}
+	// try to copy a value to a non map[string]any
 	ptr := make(map[int]string)
 
 	err := WriteAnswer(&ptr, "name", "world")
@@ -557,7 +557,7 @@ type testPtrTaggedStruct struct {
 	TaggedValue *testStringSettable `survey:"tagged"`
 }
 
-func (t *testFieldSettable) WriteAnswer(name string, value interface{}) error {
+func (t *testFieldSettable) WriteAnswer(name string, value any) error {
 	if t.Values == nil {
 		t.Values = map[string]string{}
 	}
@@ -568,7 +568,7 @@ func (t *testFieldSettable) WriteAnswer(name string, value interface{}) error {
 	return fmt.Errorf("Incompatible type %T", value)
 }
 
-func (t *testStringSettable) WriteAnswer(_ string, value interface{}) error {
+func (t *testStringSettable) WriteAnswer(_ string, value any) error {
 	t.Value = value.(string)
 	return nil
 }

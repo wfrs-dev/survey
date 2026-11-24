@@ -23,7 +23,7 @@ type MultiSelect struct {
 	Renderer
 	Message       string
 	Options       []string
-	Default       interface{}
+	Default       any
 	Help          string
 	PageSize      int
 	VimMode       bool
@@ -54,7 +54,7 @@ type MultiSelectTemplateData struct {
 }
 
 // IterateOption sets CurrentOpt and CurrentIndex appropriately so a multiselect option can be rendered individually
-func (m MultiSelectTemplateData) IterateOption(ix int, opt core.OptionAnswer) interface{} {
+func (m MultiSelectTemplateData) IterateOption(ix int, opt core.OptionAnswer) any {
 	copy := m
 	copy.CurrentIndex = ix
 	copy.CurrentOpt = opt
@@ -228,7 +228,7 @@ func (m *MultiSelect) filterOptions(config *PromptConfig) []core.OptionAnswer {
 	return answers
 }
 
-func (m *MultiSelect) Prompt(config *PromptConfig) (interface{}, error) {
+func (m *MultiSelect) Prompt(config *PromptConfig) (any, error) {
 	// compute the default state
 	m.checked = make(map[int]bool)
 	// if there is a default
@@ -331,7 +331,7 @@ func (m *MultiSelect) Prompt(config *PromptConfig) (interface{}, error) {
 }
 
 // Cleanup removes the options section, and renders the ask like a normal question.
-func (m *MultiSelect) Cleanup(config *PromptConfig, val interface{}) error {
+func (m *MultiSelect) Cleanup(config *PromptConfig, val any) error {
 	// the answer to show
 	answer := ""
 	for _, ans := range val.([]core.OptionAnswer) {

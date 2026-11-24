@@ -18,7 +18,7 @@ import (
 // Note that `TransformString` is just a helper, `Transformer` can be used
 // to transform any type of answer.
 func TransformString(f func(s string) string) Transformer {
-	return func(ans interface{}) interface{} {
+	return func(ans any) any {
 		// if the answer value passed in is the zero value of the appropriate type
 		if isZero(reflect.ValueOf(ans)) {
 			// skip this `Transformer` by returning a zero value of string.
@@ -50,7 +50,7 @@ func TransformString(f func(s string) string) Transformer {
 // Note that if "ans" is not a string then it will
 // return a nil value, meaning that the above answer
 // will not be affected by this call at all.
-func ToLower(ans interface{}) interface{} {
+func ToLower(ans any) any {
 	transformer := TransformString(strings.ToLower)
 	return transformer(ans)
 }
@@ -64,7 +64,7 @@ func ToLower(ans interface{}) interface{} {
 // Note that if "ans" is not a string then it will
 // return a nil value, meaning that the above answer
 // will not be affected by this call at all.
-func Title(ans interface{}) interface{} {
+func Title(ans any) any {
 	transformer := TransformString(cases.Title(language.English).String)
 	return transformer(ans)
 }
@@ -72,7 +72,7 @@ func Title(ans interface{}) interface{} {
 // ComposeTransformers is a variadic function used to create one transformer from many.
 func ComposeTransformers(transformers ...Transformer) Transformer {
 	// return a transformer that calls each one sequentially
-	return func(ans interface{}) interface{} {
+	return func(ans any) any {
 		// execute each transformer
 		for _, t := range transformers {
 			ans = t(ans)
