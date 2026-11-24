@@ -19,7 +19,14 @@ Branch: `chore/go-1.21-modernization` (continues the open PR #1).
 - **T4** (S3) — `hinshun/vt10x` to v0.0.0-20220301184237-5011da428d02, after independent verification found it pinned one release behind.
 - **T5** (S1, S4) — `TestTitle` in `transform_test.go`: locks the exported `Title` contract that the `x/text` upgrade crosses, with expectations taken from a base-vs-candidate differential.
 
-Work-unit commit: pending.
+Work-unit commit: `3d0a6de`.
+
+Delivery: stacked PRs to `master` (`chain_strategy=stacked-to-main`).
+
+- **First slice** — `6bd0e3a..562e544` on `chore/modernize-go-1.21`, Go 1.21 modernization, 9 commits. It carries `562e544`, which keeps the pre-1.24 Go leg off macOS: without it that slice shipped a red `test (macos-latest, 1.21)` leg, because the `LC_UUID` problem in L4 is not specific to Go 1.23 — every toolchain older than 1.24 links binaries that image refuses to load.
+- **Second slice** — this feature, on `chore/go-1.23-deps`, based on the first slice's branch so its diff shows only the dependency change plus `TestTitle` and this document. Retarget it to `master` once the first slice merges.
+- Both slices land well under the ~400-line review advisory on their own; the 515-line total measured before the split was the reason for chaining them.
+- `chore/go-1.21-modernization` stays on the remote at `45f9685` as the pre-split branch. The PR that tracked it is closed with a pointer to both slices, because force-pushing a published branch was denied by policy.
 
 ## Log
 
