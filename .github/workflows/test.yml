@@ -15,9 +15,9 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ubuntu-latest, windows-latest]
-        # 1.21 is the minimum required by go.mod; "stable" follows the current
+        # 1.23 is the minimum required by go.mod; "stable" follows the current
         # release instead of going stale like a pinned patch version would.
-        go: ["1.21", "stable"]
+        go: ["1.23", "stable"]
         # macOS is intentionally out of the matrix for now. Two separate
         # problems, both about the runner rather than about this code:
         #
