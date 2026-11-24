@@ -19,14 +19,14 @@ Branch: `chore/go-1.21-modernization` (continues the open PR #1).
 - **T4** (S3) — `hinshun/vt10x` to v0.0.0-20220301184237-5011da428d02, after independent verification found it pinned one release behind.
 - **T5** (S1, S4) — `TestTitle` in `transform_test.go`: locks the exported `Title` contract that the `x/text` upgrade crosses, with expectations taken from a base-vs-candidate differential.
 
-Work-unit commit: `3d0a6de`.
+Work-unit commit: `7512d49`.
 
-Delivery: stacked PRs to `master` (`chain_strategy=stacked-to-main`).
+Delivery history (`chain_strategy=stacked-to-main`, rebase merge):
 
-- **First slice** — `6bd0e3a..562e544` on `chore/modernize-go-1.21`, Go 1.21 modernization, 9 commits. It carries `562e544`, which keeps the pre-1.24 Go leg off macOS: without it that slice shipped a red `test (macos-latest, 1.21)` leg, because the `LC_UUID` problem in L4 is not specific to Go 1.23 — every toolchain older than 1.24 links binaries that image refuses to load.
-- **Second slice** — this feature, on `chore/go-1.23-deps`, based on the first slice's branch so its diff shows only the dependency change plus `TestTitle` and this document. Retarget it to `master` once the first slice merges.
-- Both slices land well under the ~400-line review advisory on their own; the 515-line total measured before the split was the reason for chaining them.
-- `chore/go-1.21-modernization` stays on the remote at `45f9685` as the pre-split branch. The PR that tracked it is closed with a pointer to both slices, because force-pushing a published branch was denied by policy.
+- **Base slice** — Go 1.21 modernization. Landed on `master` by rebase merge as `3830dce..78c050c`, 10 commits, no merge commit. It carries `e95f8ff`, which keeps the pre-1.24 Go leg off macOS, and `78c050c`, which takes macOS out of the matrix and documents how to verify a change on a Mac by hand. Branch `chore/modernize-go-1.21` deleted after the merge.
+- **This slice** — rebuilt on that `master` as `7512d49` plus this document, branch `chore/deps-go-1.23`. Its diff against `master` is the dependency change, `TestTitle` and this document, nothing else.
+- An earlier single PR carried both slices in one 515-line diff and was closed. Force-pushing a published branch is denied by policy, so the split was published as new branches rather than as a rewrite, and the rebase merge then forced this slice to be rebuilt on the rewritten base.
+- Both slices are single reviewable units on their own; the 515-line total measured before the split was the reason for chaining them.
 
 ## Log
 
@@ -38,3 +38,4 @@ Delivery: stacked PRs to `master` (`chain_strategy=stacked-to-main`).
 - **L6** (correction) — Independent verification returned S3 as fail: `hinshun/vt10x` was pinned at v0.0.0-20220119200601-820417d04eec while `@latest` is v0.0.0-20220301184237-5011da428d02. The first draft of S3 claimed it was already newest; that claim was wrong, and the version now moves. Re-verified: `go mod tidy -diff` clean, suite green.
 - **L7** (evidence) — `Title` had no dedicated test and no assertion on its output (`TestComposeTransformers` called it, but compared the result through a following `ToLower`, which masks casing regressions). It is the exported surface the `x/text` v0.4.0 -> v0.28.0 jump crosses (`cases.Title(language.English)`). A base-vs-candidate differential over 16 inputs (apostrophes, ligatures, Greek, `ß`, dotted `İ`, whitespace, non-string) produced byte-identical output, so the new `TestTitle` records pre-existing behaviour rather than blessing a change. The same expectations were re-run against `x/text` v0.4.0, v0.13.0, v0.22.0, v0.28.0 and v0.34.0: identical in all five, so the pin is not fitted to one release.
 - **L8** (correction) — Verification also flagged the PR wording: `go-spew`, `go-difflib` and `gopkg.in/yaml.v3` did not leave the module graph entirely; they left `go.mod`'s require blocks and `go.sum`'s `h1:` lines because testify v1.12.1 reaches them only on its test path. They are not imported by this library outside `_test.go` files.
+- **L9** (decision, maintainer; supersedes L5's mechanism) — macOS leaves the matrix entirely, in both slices. Evidence: on 2026-11-24 the `test (macos-latest, stable)` job of the `pull_request` run was cancelled twice, after roughly fifteen minutes queued and without executing anything, while the same commit had run it green in 33-40s in the `push` run. `gh pr checks` renders a cancelled job as a failure, so a green commit reads as broken. Combined with L4, macOS coverage cannot be obtained from this CI at all right now. The workflow states both reasons and the exact commands to verify on a Mac by hand — including the `examples/` and `tests/` loop, because those are `//go:build ignore` mains that neither `go vet` nor `go test` looks at. Restore `macos-latest` once a real runner is reliably available.
