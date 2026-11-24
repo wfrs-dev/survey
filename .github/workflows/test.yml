@@ -18,6 +18,14 @@ jobs:
         # 1.21 is the minimum required by go.mod; "stable" follows the current
         # release instead of going stale like a pinned patch version would.
         go: ["1.21", "stable"]
+        exclude:
+          # Go older than 1.24 links Mach-O binaries without an LC_UUID load
+          # command and the current macOS runner image aborts them on load:
+          #   dyld: missing LC_UUID load command / signal: abort trap
+          # (go.dev/doc/go1.24, golang/go#68678). The 1.21 compatibility leg
+          # runs on Linux and Windows; macOS is covered by the stable leg.
+          - platform: macos-latest
+            go: "1.21"
 
     runs-on: ${{ matrix.platform }}
 
