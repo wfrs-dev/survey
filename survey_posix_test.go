@@ -40,18 +40,33 @@ func RunTest(t *testing.T, procedure func(expectConsole), test func(terminal.Std
 	}()
 
 	stdio := terminal.Stdio{In: c.Tty(), Out: c.Tty(), Err: c.Tty()}
-	if err := test(stdio); err != nil {
-		t.Error(err)
+
+	// The prompt runs in its own goroutine, bounded for the same reason as the
+	// procedure below: a prompt waiting for input that never arrives would
+	// otherwise block this test until the package deadline kills it.
+	testDone := make(chan error, 1)
+	go func() {
+		testDone <- test(stdio)
+	}()
+
+	select {
+	case err := <-testDone:
+		if err != nil {
+			t.Error(err)
+		}
+	case <-time.After(testProcedureTimeout):
+		_ = c.Tty().Close()
+		t.Fatalf("prompt did not finish within %s", testProcedureTimeout)
 	}
 
 	if err := c.Tty().Close(); err != nil {
 		t.Errorf("error closing Tty: %v", err)
 	}
 
-	// The procedure runs in its own goroutine and blocks on the pty. Without a
-	// bound, a single unmet expectation prevents the test from ever finishing
-	// and the whole package dies against the `go test -timeout` deadline with no
-	// indication of which expectation did not match. Fail here instead.
+	// The procedure blocks on the pty, so without a bound a single unmet
+	// expectation prevents the test from ever finishing and the whole package
+	// dies against the `go test -timeout` deadline with no indication of which
+	// expectation did not match. Fail here instead.
 	select {
 	case <-donec:
 	case <-time.After(testProcedureTimeout):
