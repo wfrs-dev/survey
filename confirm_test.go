@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/AlecAivazis/survey/v2/core"
-	"github.com/AlecAivazis/survey/v2/terminal"
 	"github.com/stretchr/testify/assert"
+	"github.com/wfrs-dev/survey/v2/core"
+	"github.com/wfrs-dev/survey/v2/terminal"
 )
 
 func init() {

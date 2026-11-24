@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/AlecAivazis/survey/v2"
+	"github.com/wfrs-dev/survey/v2"
 )
 
 type Meal struct {
