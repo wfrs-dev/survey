@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/stretchr/testify/assert"
+	"github.com/wfrs-dev/survey/v2/core"
 )
 
 func init() {

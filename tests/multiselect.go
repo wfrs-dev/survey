@@ -5,8 +5,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/AlecAivazis/survey/v2"
-	TestUtil "github.com/AlecAivazis/survey/v2/tests/util"
+	"github.com/wfrs-dev/survey/v2"
+	TestUtil "github.com/wfrs-dev/survey/v2/tests/util"
 )
 
 var answer = []string{}
