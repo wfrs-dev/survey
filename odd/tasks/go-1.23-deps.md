@@ -19,7 +19,9 @@ Branch: `chore/go-1.21-modernization` (continues the open PR #1).
 - **T4** (S3) — `hinshun/vt10x` to v0.0.0-20220301184237-5011da428d02, after independent verification found it pinned one release behind.
 - **T5** (S1, S4) — `TestTitle` in `transform_test.go`: locks the exported `Title` contract that the `x/text` upgrade crosses, with expectations taken from a base-vs-candidate differential.
 
-Work-unit commit: pending.
+Work-unit commit: `38288b1`.
+
+Slice boundary: PR #1 now carries two slices — `6bd0e3a..e2c5dca` (Go 1.21 modernization, 8 commits) and `38288b1` (this feature: dependency refresh plus the Go 1.23 floor). That is 513 authored changed lines since `origin/master` with `go.mod`/`go.sum` excluded, above the ~400-line review advisory. Kept as one PR because it was already open; splitting into a chain is the reviewer's call.
 
 ## Log
 
