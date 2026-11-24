@@ -620,7 +620,7 @@ func TestWrite_canStringToBool(t *testing.T) {
 
 func TestWrite_canStringToInt(t *testing.T) {
 	// a pointer to hold the value
-	var ptr int = 1
+	ptr := 1
 
 	// try to copy a value to the pointer
 	err := WriteAnswer(&ptr, "", "2")
@@ -807,7 +807,7 @@ func TestWrite_canStringToFloat32(t *testing.T) {
 
 func TestWrite_canStringToFloat64(t *testing.T) {
 	// a pointer to hold the value
-	var ptr float64 = 1.0
+	ptr := 1.0
 
 	// try to copy a value to the pointer
 	err := WriteAnswer(&ptr, "", "2.5")
@@ -856,7 +856,7 @@ func TestWrite_canConvertStructFieldTypes(t *testing.T) {
 		t.Error("Did not mutate Height when writing answer.")
 	}
 
-	if ptr.Timeout != time.Duration(30*time.Second) {
+	if ptr.Timeout != 30*time.Second {
 		t.Error("Did not mutate Timeout when writing answer.")
 	}
 }

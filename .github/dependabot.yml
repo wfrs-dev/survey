@@ -1,0 +1,21 @@
+# Dependency update automation. Dependabot opens pull requests against the
+# repository's default branch (master); the test and lint workflows check them.
+version: 2
+
+updates:
+  # Go module dependencies: go.mod and go.sum in the repository root.
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+
+  # GitHub Actions: the commit-SHA pins in .github/workflows are bumped here
+  # instead of by hand, and the `# vX.Y.Z` comments are kept in step.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5

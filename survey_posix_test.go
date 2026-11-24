@@ -31,7 +31,7 @@ func RunTest(t *testing.T, procedure func(expectConsole), test func(terminal.Std
 	if err != nil {
 		t.Fatalf("failed to create console: %v", err)
 	}
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 
 	donec := make(chan struct{})
 	go func() {

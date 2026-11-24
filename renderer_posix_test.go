@@ -20,8 +20,8 @@ func TestRenderer_countLines(t *testing.T) {
 	termWidth := 72
 	pty, tty, err := pseudotty.Open()
 	require.Nil(t, err)
-	defer pty.Close()
-	defer tty.Close()
+	defer func() { _ = pty.Close() }()
+	defer func() { _ = tty.Close() }()
 
 	err = pseudotty.Setsize(tty, &pseudotty.Winsize{
 		Rows: 30,

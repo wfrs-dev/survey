@@ -1,0 +1,49 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - misspell
+    - staticcheck
+    - unconvert
+    - unused
+  settings:
+    govet:
+      # Go 1.27 added an `inline` analyzer to the vet analyzer set. It
+      # reports `go:fix inline` modernization rewrites rather than defects,
+      # and its output depends on the toolchain: with this repository's go
+      # directive it says "cannot inline call to reflect.PtrTo (declared using
+      # go1.27.2) into a file using go1.23.0". The same code would pass or fail
+      # depending on which standard library golangci-lint was built against,
+      # so the check says nothing stable about this code. Disable that single
+      # analyzer; every other vet check stays on.
+      disable:
+        - inline
+
+  exclusions:
+    rules:
+      # Two opinionated style checks are excluded on purpose, and reviewed
+      # here rather than silenced inline in the source:
+      #
+      #   ST1012 wants terminal.InterruptErr renamed to ErrInterrupt. That is a
+      #          breaking rename of an exported symbol, so it is an API change
+      #          for the maintainer to decide, not a lint fix.
+      #   ST1005 wants error strings downcased. These strings are what callers
+      #          and end users already see; rewriting them is a message change,
+      #          not a defect fix.
+      #
+      # Everything else in staticcheck (SA*, the rest of ST and QF) stays on.
+      - linters:
+          - staticcheck
+        text: "ST1012|ST1005"
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

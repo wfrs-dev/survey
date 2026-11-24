@@ -74,8 +74,8 @@ func testTermModeRestoredOnSignal(t *testing.T, sigName string) {
 	if err != nil {
 		t.Fatalf("failed to open pseudotty: %v", err)
 	}
-	defer ptmx.Close()
-	defer tty.Close()
+	defer func() { _ = ptmx.Close() }()
+	defer func() { _ = tty.Close() }()
 
 	before := termiosOf(t, tty)
 
@@ -153,8 +153,8 @@ func TestSetAndRestoreTermMode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open pseudotty: %v", err)
 	}
-	defer ptmx.Close()
-	defer tty.Close()
+	defer func() { _ = ptmx.Close() }()
+	defer func() { _ = tty.Close() }()
 
 	before := termiosOf(t, tty)
 

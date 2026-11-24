@@ -2,7 +2,6 @@ package survey
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"runtime"
@@ -107,8 +106,8 @@ func (e *Editor) prompt(initialValue string, config *PromptConfig) (interface{},
 	}()
 
 	cursor := e.NewCursor()
-	cursor.Hide()
-	defer cursor.Show()
+	_ = cursor.Hide()
+	defer func() { _ = cursor.Show() }()
 
 	for {
 		r, _, err := rr.ReadRune()
@@ -145,7 +144,7 @@ func (e *Editor) prompt(initialValue string, config *PromptConfig) (interface{},
 	if pattern == "" {
 		pattern = "survey*.txt"
 	}
-	f, err := ioutil.TempFile("", pattern)
+	f, err := os.CreateTemp("", pattern)
 	if err != nil {
 		return "", err
 	}
@@ -195,13 +194,13 @@ func (e *Editor) prompt(initialValue string, config *PromptConfig) (interface{},
 	cmd.Stdin = stdio.In
 	cmd.Stdout = stdio.Out
 	cmd.Stderr = stdio.Err
-	cursor.Show()
+	_ = cursor.Show()
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
 
 	// raw is a BOM-unstripped UTF8 byte slice
-	raw, err := ioutil.ReadFile(f.Name())
+	raw, err := os.ReadFile(f.Name())
 	if err != nil {
 		return "", err
 	}
