@@ -2,28 +2,61 @@ name: Test
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
-        go: ["1.19", "1.18", "1.17", "1.16"]
+        # 1.21 is the minimum required by go.mod; 1.27 is the current release.
+        go: ["1.21", "1.27"]
 
     runs-on: ${{ matrix.platform }}
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v7
 
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: "${{ matrix.go }}"
-        cache: true
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: "${{ matrix.go }}"
+          cache: true
 
-    - name: Add problem matcher
-      run: echo "::add-matcher::$PWD/.github/matchers.json"
+      - name: Add problem matcher
+        run: echo "::add-matcher::$PWD/.github/matchers.json"
 
-    - name: Run tests
-      run: go test -timeout 30s -v $(go list -v ./... | grep -vE '(tests|examples)$')
+      - name: Run tests
+        run: go test -timeout 120s ./...
+
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: "1.27"
+          cache: true
+
+      - name: Check formatting
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "The following files need gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
