@@ -1,6 +1,6 @@
 # Survey
 
-[![GoDoc](http://img.shields.io/badge/godoc-reference-5272B4.svg)](https://pkg.go.dev/github.com/AlecAivazis/survey/v2)
+[![GoDoc](http://img.shields.io/badge/godoc-reference-5272B4.svg)](https://pkg.go.dev/github.com/wfrs-dev/survey/v2)
 
 A library for building interactive and accessible prompts on terminals supporting ANSI escape sequences.
 
