@@ -14,7 +14,13 @@ import (
 // interruptedSignals are the signals whose default action terminates the
 // process, and whose arrival therefore cannot wait for the caller's deferred
 // RestoreTermMode to run.
-var interruptedSignals = []os.Signal{syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP}
+//
+// SIGQUIT belongs here even though it behaves differently from the others: the
+// Go runtime installs its own handler for it, so once this one stops listening
+// the re-raised signal reaches that handler, which prints the goroutine dump and
+// exits with status 2 instead of dying by the signal. Restoring first is exactly
+// the point — a stack dump is unreadable on a terminal left in raw mode.
+var interruptedSignals = []os.Signal{syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT}
 
 // signalRestorer returns the terminal to the mode SetTermMode replaced when the
 // process is interrupted while the terminal is in raw mode.
