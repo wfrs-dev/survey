@@ -105,17 +105,17 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 			// delete what's printed out on the console screen (cleanup)
 			for index > 0 {
 				if cursorCurrent.CursorIsAtLineBegin() {
-					EraseLine(rr.stdio.Out, ERASE_LINE_END)
-					cursor.PreviousLine(1)
-					cursor.Forward(int(terminalSize.X))
+					_ = EraseLine(rr.stdio.Out, ERASE_LINE_END)
+					_ = cursor.PreviousLine(1)
+					_ = cursor.Forward(int(terminalSize.X))
 				} else {
-					cursor.Back(1)
+					_ = cursor.Back(1)
 				}
 				decrement()
 				index--
 			}
 			// move the cursor the a new line
-			cursor.MoveNextLine(cursorCurrent, terminalSize)
+			_ = cursor.MoveNextLine(cursorCurrent, terminalSize)
 
 			// we're done processing the input
 			return line, nil
@@ -143,14 +143,14 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 					line = line[:len(line)-1]
 					// go back one
 					if cursorCurrent.X == 1 {
-						cursor.PreviousLine(1)
-						cursor.Forward(int(terminalSize.X))
+						_ = cursor.PreviousLine(1)
+						_ = cursor.Forward(int(terminalSize.X))
 					} else {
-						cursor.Back(cells)
+						_ = cursor.Back(cells)
 					}
 
 					// clear the rest of the line
-					EraseLine(rr.stdio.Out, ERASE_LINE_END)
+					_ = EraseLine(rr.stdio.Out, ERASE_LINE_END)
 				} else {
 					// we need to remove a character from the middle of the word
 
@@ -162,15 +162,15 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 					// save the current position of the cursor, as we have to move the cursor one back to erase the current symbol
 					// and then move the cursor for each symbol in line[index-1:] to print it out, afterwards we want to restore
 					// the cursor to its previous location.
-					cursor.Save()
+					_ = cursor.Save()
 
 					// clear the rest of the line
-					cursor.Back(cells)
+					_ = cursor.Back(cells)
 
 					// print what comes after
 					for _, char := range line[index-1:] {
 						//Erase symbols which are left over from older print
-						EraseLine(rr.stdio.Out, ERASE_LINE_END)
+						_ = EraseLine(rr.stdio.Out, ERASE_LINE_END)
 						// print characters to the new line appropriately
 						if err := rr.printChar(char, mask); err != nil {
 							return line, err
@@ -178,16 +178,16 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 					}
 					// erase what's left over from last print
 					if cursorCurrent.Y < terminalSize.Y {
-						cursor.NextLine(1)
-						EraseLine(rr.stdio.Out, ERASE_LINE_END)
+						_ = cursor.NextLine(1)
+						_ = EraseLine(rr.stdio.Out, ERASE_LINE_END)
 					}
 					// restore cursor
-					cursor.Restore()
+					_ = cursor.Restore()
 					if cursorCurrent.CursorIsAtLineBegin() {
-						cursor.PreviousLine(1)
-						cursor.Forward(int(terminalSize.X))
+						_ = cursor.PreviousLine(1)
+						_ = cursor.Forward(int(terminalSize.X))
 					} else {
-						cursor.Back(cells)
+						_ = cursor.Back(cells)
 					}
 				}
 
@@ -209,10 +209,10 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 			if index > 0 {
 				//move the cursor to the prev line if necessary
 				if cursorCurrent.CursorIsAtLineBegin() {
-					cursor.PreviousLine(1)
-					cursor.Forward(int(terminalSize.X))
+					_ = cursor.PreviousLine(1)
+					_ = cursor.Forward(int(terminalSize.X))
 				} else {
-					cursor.Back(runeWidth(line[index-1]))
+					_ = cursor.Back(runeWidth(line[index-1]))
 				}
 				//decrement the index
 				index--
@@ -234,9 +234,9 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 			if index < len(line) {
 				// move the cursor to the next line if necessary
 				if cursorCurrent.CursorIsAtLineEnd(terminalSize) {
-					cursor.NextLine(1)
+					_ = cursor.NextLine(1)
 				} else {
-					cursor.Forward(runeWidth(line[index]))
+					_ = cursor.Forward(runeWidth(line[index]))
 				}
 				index++
 				increment()
@@ -254,12 +254,12 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 		if r == SpecialKeyHome {
 			for index > 0 {
 				if cursorCurrent.CursorIsAtLineBegin() {
-					cursor.PreviousLine(1)
-					cursor.Forward(int(terminalSize.X))
+					_ = cursor.PreviousLine(1)
+					_ = cursor.Forward(int(terminalSize.X))
 					cursorCurrent.Y--
 					cursorCurrent.X = terminalSize.X
 				} else {
-					cursor.Back(runeWidth(line[index-1]))
+					_ = cursor.Back(runeWidth(line[index-1]))
 					cursorCurrent.X -= Short(runeWidth(line[index-1]))
 				}
 				index--
@@ -269,11 +269,11 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 		} else if r == SpecialKeyEnd {
 			for index != len(line) {
 				if cursorCurrent.CursorIsAtLineEnd(terminalSize) {
-					cursor.NextLine(1)
+					_ = cursor.NextLine(1)
 					cursorCurrent.Y++
 					cursorCurrent.X = COORDINATE_SYSTEM_BEGIN
 				} else {
-					cursor.Forward(runeWidth(line[index]))
+					_ = cursor.Forward(runeWidth(line[index]))
 					cursorCurrent.X += Short(runeWidth(line[index]))
 				}
 				index++
@@ -286,12 +286,12 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 				// save the current position of the cursor, as we have to  erase the current symbol
 				// and then move the cursor for each symbol in line[index:] to print it out, afterwards we want to restore
 				// the cursor to its previous location.
-				cursor.Save()
+				_ = cursor.Save()
 				// remove the symbol after the cursor
 				line = append(line[:index], line[index+1:]...)
 				// print the updated line
 				for _, char := range line[index:] {
-					EraseLine(rr.stdio.Out, ERASE_LINE_END)
+					_ = EraseLine(rr.stdio.Out, ERASE_LINE_END)
 					// print out the character
 					if err := rr.printChar(char, mask); err != nil {
 						return line, err
@@ -299,13 +299,13 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 				}
 				// erase what's left on last line
 				if cursorCurrent.Y < terminalSize.Y {
-					cursor.NextLine(1)
-					EraseLine(rr.stdio.Out, ERASE_LINE_END)
+					_ = cursor.NextLine(1)
+					_ = EraseLine(rr.stdio.Out, ERASE_LINE_END)
 				}
 				// restore cursor
-				cursor.Restore()
+				_ = cursor.Restore()
 				if len(line) == 0 || index == len(line) {
-					EraseLine(rr.stdio.Out, ERASE_LINE_END)
+					_ = EraseLine(rr.stdio.Out, ERASE_LINE_END)
 				}
 			}
 			continue
@@ -336,12 +336,12 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 			// save the current position of the cursor, as we have to move the cursor back to erase the current symbol
 			// and then move for each symbol in line[index:] to print it out, afterwards we want to restore
 			// cursor's location to its previous one.
-			cursor.Save()
-			EraseLine(rr.stdio.Out, ERASE_LINE_END)
+			_ = cursor.Save()
+			_ = EraseLine(rr.stdio.Out, ERASE_LINE_END)
 			// remove the symbol after the cursor
 			// print the updated line
 			for _, char := range line[index:] {
-				EraseLine(rr.stdio.Out, ERASE_LINE_END)
+				_ = EraseLine(rr.stdio.Out, ERASE_LINE_END)
 				// print out the character
 				if err := rr.printChar(char, mask); err != nil {
 					return line, err
@@ -355,19 +355,19 @@ func (rr *RuneReader) ReadLineWithDefault(mask rune, d []rune, onRunes ...OnRune
 					return line, err
 				}
 				// restore the position of the cursor horizontally
-				cursor.Restore()
+				_ = cursor.Restore()
 				// restore the position of the cursor vertically
-				cursor.PreviousLine(1)
+				_ = cursor.PreviousLine(1)
 			} else {
 				// restore cursor
-				cursor.Restore()
+				_ = cursor.Restore()
 			}
 			// check if cursor needs to move to next line
 			cursorCurrent, _ = cursor.Location(rr.Buffer())
 			if cursorCurrent.CursorIsAtLineEnd(terminalSize) {
-				cursor.NextLine(1)
+				_ = cursor.NextLine(1)
 			} else {
-				cursor.Forward(runeWidth(r))
+				_ = cursor.Forward(runeWidth(r))
 			}
 			// increment the index
 			index++

@@ -1,0 +1,79 @@
+name: Release
+
+# Tag-driven release. The module is a library, so there is nothing to build or
+# upload: the job proves the tagged commit passes the test suite and then
+# publishes a GitHub release whose notes GitHub generates from the commits and
+# pull requests since the previous tag.
+#
+# A tag must be a v2 semver tag (v2.x.y) to match the /v2 module path in
+# go.mod; a v1 tag would not be a valid version of this module.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    # Creating a release needs write access; the workflow default above stays
+    # read-only so every other step runs with the minimum it needs.
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Go
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: "stable"
+          cache: true
+
+      - name: Run tests
+        run: go test -count=1 -timeout 120s ./...
+
+      - name: Check the tag names a version of this module
+        run: |
+          set -euo pipefail
+          # go.mod declares the /v2 module path, so only v2.x.y tags are versions
+          # of it. Without this guard a stray vfoo or v1.2.3 tag would publish a
+          # release that does not correspond to any usable version.
+          case "$GITHUB_REF_NAME" in
+            v2.*.*) ;;
+            *)
+              echo "::error::tag $GITHUB_REF_NAME is not a v2.x.y version of this module"
+              exit 1
+              ;;
+          esac
+
+      - name: Create GitHub release
+        env:
+          # `gh` reads the token from GH_TOKEN; the job permission supplies it.
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # The workflow is triggered by the tag push, so the tag exists:
+          # --verify-tag turns that assumption into a check instead of letting
+          # gh create a release on an arbitrary commit.
+          #
+          # Re-running the workflow, or re-pushing a tag that already has a
+          # release, must not fail on HTTP 422 "already exists": the release is
+          # the desired end state, so an existing one is success.
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "release $GITHUB_REF_NAME already exists; nothing to do"
+            exit 0
+          fi
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --generate-notes \
+            --title "$GITHUB_REF_NAME"

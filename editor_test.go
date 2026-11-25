@@ -53,13 +53,13 @@ func TestEditorRender(t *testing.T) {
 			"Test Editor question output without default but with help hidden",
 			Editor{Message: "What is your favorite month:", Help: "This is helpful"},
 			EditorTemplateData{},
-			fmt.Sprintf("%s What is your favorite month: [%s for help] [Enter to launch editor] ", defaultIcons().Question.Text, string(defaultPromptConfig().HelpInput)),
+			fmt.Sprintf("%s What is your favorite month: [%s for help] [Enter to launch editor] ", defaultIcons().Question.Text, defaultPromptConfig().HelpInput),
 		},
 		{
 			"Test Editor question output with default and with help hidden",
 			Editor{Message: "What is your favorite month:", Default: "April", Help: "This is helpful"},
 			EditorTemplateData{},
-			fmt.Sprintf("%s What is your favorite month: [%s for help] (April) [Enter to launch editor] ", defaultIcons().Question.Text, string(defaultPromptConfig().HelpInput)),
+			fmt.Sprintf("%s What is your favorite month: [%s for help] (April) [Enter to launch editor] ", defaultIcons().Question.Text, defaultPromptConfig().HelpInput),
 		},
 		{
 			"Test Editor question output without default but with help shown",
@@ -190,7 +190,7 @@ func TestEditorPrompt(t *testing.T) {
 				c.ExpectString(
 					fmt.Sprintf(
 						"Edit git commit message [%s for help] [Enter to launch editor]",
-						string(defaultPromptConfig().HelpInput),
+						defaultPromptConfig().HelpInput,
 					),
 				)
 				c.SendLine("?")

@@ -154,7 +154,7 @@ func (c *Cursor) Location(buf *bytes.Buffer) (*Coord, error) {
 		}
 	}
 
-	matches := dsrPattern.FindStringSubmatch(string(match))
+	matches := dsrPattern.FindStringSubmatch(match)
 	if len(matches) != 3 {
 		return nil, fmt.Errorf("incorrect number of matches: %d", len(matches))
 	}
@@ -187,15 +187,15 @@ func (c *Cursor) Size(buf *bytes.Buffer) (*Coord, error) {
 	// cursor back where we started
 
 	// hide the cursor (so it doesn't blink when getting the size of the terminal)
-	c.Hide()
-	defer c.Show()
+	_ = c.Hide()
+	defer func() { _ = c.Show() }()
 
 	// save the current location of the cursor
-	c.Save()
-	defer c.Restore()
+	_ = c.Save()
+	defer func() { _ = c.Restore() }()
 
 	// move the cursor to the very bottom of the terminal
-	c.move(999, 999)
+	_ = c.move(999, 999)
 
 	// ask for the current location
 	bottom, err := c.Location(buf)

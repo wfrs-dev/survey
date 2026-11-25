@@ -82,7 +82,7 @@ func TestMultiSelectRender(t *testing.T) {
 			},
 			strings.Join(
 				[]string{
-					fmt.Sprintf("%s Pick your words:  [Use arrows to move, space to select, <right> to all, <left> to none, type to filter, %s for more help]", defaultIcons().Question.Text, string(defaultPromptConfig().HelpInput)),
+					fmt.Sprintf("%s Pick your words:  [Use arrows to move, space to select, <right> to all, <left> to none, type to filter, %s for more help]", defaultIcons().Question.Text, defaultPromptConfig().HelpInput),
 					fmt.Sprintf("  %s  foo", defaultIcons().UnmarkedOption.Text),
 					fmt.Sprintf("  %s  bar", defaultIcons().MarkedOption.Text),
 					fmt.Sprintf("%s %s  baz", defaultIcons().SelectFocus.Text, defaultIcons().UnmarkedOption.Text),

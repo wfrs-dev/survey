@@ -76,7 +76,7 @@ func (p *Password) Prompt(config *PromptConfig) (interface{}, error) {
 
 		if string(line) == config.HelpInput {
 			// terminal will echo the \n so we need to jump back up one row
-			cursor.PreviousLine(1)
+			_ = cursor.PreviousLine(1)
 
 			err = p.Render(
 				PasswordQuestionTemplate,

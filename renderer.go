@@ -3,6 +3,7 @@ package survey
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/wfrs-dev/survey/v2/core"
 	"github.com/wfrs-dev/survey/v2/terminal"
 	"golang.org/x/term"
@@ -72,7 +73,7 @@ func (r *Renderer) Error(config *PromptConfig, invalid error) error {
 func (r *Renderer) OffsetCursor(offset int) {
 	cursor := r.NewCursor()
 	for offset > 0 {
-		cursor.PreviousLine(1)
+		_ = cursor.PreviousLine(1)
 		offset--
 	}
 }
@@ -103,12 +104,12 @@ func (r *Renderer) Render(tmpl string, data interface{}) error {
 
 func (r *Renderer) RenderWithCursorOffset(tmpl string, data IterableOpts, opts []core.OptionAnswer, idx int) error {
 	cursor := r.NewCursor()
-	cursor.Restore() // clear any accessibility offsetting
+	_ = cursor.Restore() // clear any accessibility offsetting
 
 	if err := r.Render(tmpl, data); err != nil {
 		return err
 	}
-	cursor.Save()
+	_ = cursor.Save()
 
 	offset := computeCursorOffset(MultiSelectQuestionTemplate, data, opts, idx, r.termWidthSafe())
 	r.OffsetCursor(offset)
@@ -133,12 +134,12 @@ func (r *Renderer) AppendRenderedText(text string) {
 func (r *Renderer) resetPrompt(lines int) {
 	// clean out current line in case tmpl didnt end in newline
 	cursor := r.NewCursor()
-	cursor.HorizontalAbsolute(0)
-	terminal.EraseLine(r.stdio.Out, terminal.ERASE_LINE_ALL)
+	_ = cursor.HorizontalAbsolute(0)
+	_ = terminal.EraseLine(r.stdio.Out, terminal.ERASE_LINE_ALL)
 	// clean up what we left behind last time
 	for i := 0; i < lines; i++ {
-		cursor.PreviousLine(1)
-		terminal.EraseLine(r.stdio.Out, terminal.ERASE_LINE_ALL)
+		_ = cursor.PreviousLine(1)
+		_ = terminal.EraseLine(r.stdio.Out, terminal.ERASE_LINE_ALL)
 	}
 }
 

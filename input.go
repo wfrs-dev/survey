@@ -158,8 +158,8 @@ func (i *Input) Prompt(config *PromptConfig) (interface{}, error) {
 	}()
 	cursor := i.NewCursor()
 	if !config.ShowCursor {
-		cursor.Hide()       // hide the cursor
-		defer cursor.Show() // show the cursor when we're done
+		_ = cursor.Hide()                    // hide the cursor
+		defer func() { _ = cursor.Show() }() // show the cursor when we're done
 	}
 
 	var line []rune
@@ -183,7 +183,7 @@ func (i *Input) Prompt(config *PromptConfig) (interface{}, error) {
 
 	i.answer = string(line)
 	// readline print an empty line, go up before we render the follow up
-	cursor.Up(1)
+	_ = cursor.Up(1)
 
 	// if we ran into the help string
 	if i.answer == config.HelpInput && i.Help != "" {

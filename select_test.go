@@ -63,7 +63,7 @@ func TestSelectRender(t *testing.T) {
 			SelectTemplateData{SelectedIndex: 2, PageEntries: core.OptionAnswerList(prompt.Options)},
 			strings.Join(
 				[]string{
-					fmt.Sprintf("%s Pick your word:  [Use arrows to move, type to filter, %s for more help]", defaultIcons().Question.Text, string(defaultPromptConfig().HelpInput)),
+					fmt.Sprintf("%s Pick your word:  [Use arrows to move, type to filter, %s for more help]", defaultIcons().Question.Text, defaultPromptConfig().HelpInput),
 					"  foo",
 					"  bar",
 					fmt.Sprintf("%s baz", defaultIcons().SelectFocus.Text),

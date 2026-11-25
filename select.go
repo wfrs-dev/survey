@@ -259,10 +259,10 @@ func (s *Select) Prompt(config *PromptConfig) (interface{}, error) {
 	opts, idx := paginate(pageSize, core.OptionAnswerList(s.Options), s.selectedIndex)
 
 	cursor := s.NewCursor()
-	cursor.Save()          // for proper cursor placement during selection
-	cursor.Hide()          // hide the cursor
-	defer cursor.Show()    // show the cursor when we're done
-	defer cursor.Restore() // clear any accessibility offsetting on exit
+	_ = cursor.Save()                       // for proper cursor placement during selection
+	_ = cursor.Hide()                       // hide the cursor
+	defer func() { _ = cursor.Show() }()    // show the cursor when we're done
+	defer func() { _ = cursor.Restore() }() // clear any accessibility offsetting on exit
 
 	tmplData := SelectTemplateData{
 		Select:        *s,
@@ -315,7 +315,7 @@ func (s *Select) Prompt(config *PromptConfig) (interface{}, error) {
 
 func (s *Select) Cleanup(config *PromptConfig, val interface{}) error {
 	cursor := s.NewCursor()
-	cursor.Restore()
+	_ = cursor.Restore()
 	return s.Render(
 		SelectQuestionTemplate,
 		SelectTemplateData{
