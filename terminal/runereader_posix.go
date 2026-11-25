@@ -1,5 +1,5 @@
-//go:build !windows
-// +build !windows
+//go:build darwin || dragonfly || freebsd || linux || netbsd || openbsd
+// +build darwin dragonfly freebsd linux netbsd openbsd
 
 // The terminal mode manipulation code is derived heavily from:
 // https://github.com/golang/crypto/blob/master/ssh/terminal/util.go:
@@ -13,8 +13,8 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"syscall"
-	"unsafe"
+
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -23,9 +23,10 @@ const (
 )
 
 type runeReaderState struct {
-	term   syscall.Termios
-	reader *bufio.Reader
-	buf    *bytes.Buffer
+	term     unix.Termios
+	reader   *bufio.Reader
+	buf      *bytes.Buffer
+	restorer *signalRestorer
 }
 
 func newRuneReaderState(input FileReader) runeReaderState {
@@ -45,19 +46,32 @@ func (rr *RuneReader) Buffer() *bytes.Buffer {
 
 // For reading runes we just want to disable echo.
 func (rr *RuneReader) SetTermMode() error {
-	if _, _, err := syscall.Syscall6(syscall.SYS_IOCTL, uintptr(rr.stdio.In.Fd()), ioctlReadTermios, uintptr(unsafe.Pointer(&rr.state.term)), 0, 0, 0); err != 0 {
+	fd := int(rr.stdio.In.Fd())
+
+	saved, err := unix.IoctlGetTermios(fd, ioctlReadTermios)
+	if err != nil {
 		return err
 	}
 
-	newState := rr.state.term
-	newState.Lflag &^= syscall.ECHO | syscall.ECHONL | syscall.ICANON | syscall.ISIG
+	// Drop the handler of a previous SetTermMode before the state it protects
+	// is rewritten, so the two never race.
+	rr.state.stopSignalRestore()
+	rr.state.term = *saved
+
+	newState := *saved
+	newState.Lflag &^= unix.ECHO | unix.ECHONL | unix.ICANON | unix.ISIG
 	// Because we are clearing canonical mode, we need to ensure VMIN & VTIME are
 	// set to the values we expect. This combination puts things in standard
 	// "blocking read" mode (see termios(3)).
-	newState.Cc[syscall.VMIN] = 1
-	newState.Cc[syscall.VTIME] = 0
+	newState.Cc[unix.VMIN] = 1
+	newState.Cc[unix.VTIME] = 0
 
-	if _, _, err := syscall.Syscall6(syscall.SYS_IOCTL, uintptr(rr.stdio.In.Fd()), ioctlWriteTermios, uintptr(unsafe.Pointer(&newState)), 0, 0, 0); err != 0 {
+	// Arm the interruption handler before the terminal is mutated: from here on
+	// every raw window has something able to undo it.
+	rr.state.startSignalRestore(fd)
+
+	if err := unix.IoctlSetTermios(fd, ioctlWriteTermios, &newState); err != nil {
+		rr.state.stopSignalRestore()
 		return err
 	}
 
@@ -65,10 +79,12 @@ func (rr *RuneReader) SetTermMode() error {
 }
 
 func (rr *RuneReader) RestoreTermMode() error {
-	if _, _, err := syscall.Syscall6(syscall.SYS_IOCTL, uintptr(rr.stdio.In.Fd()), ioctlWriteTermios, uintptr(unsafe.Pointer(&rr.state.term)), 0, 0, 0); err != 0 {
-		return err
-	}
-	return nil
+	// Restore before dropping the handler: an interruption in that window then
+	// finds either a handler that writes this same state or a terminal that is
+	// already restored, so neither order can leave it raw.
+	err := unix.IoctlSetTermios(int(rr.stdio.In.Fd()), ioctlWriteTermios, &rr.state.term)
+	rr.state.stopSignalRestore()
+	return err
 }
 
 // ReadRune Parse escape sequences such as ESC [ A for arrow keys.

@@ -2,13 +2,17 @@
 // Copyright 2013 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-//go:build linux && !ppc64le
-// +build linux,!ppc64le
+//go:build linux
+// +build linux
 
 package terminal
 
-// These constants are declared here, rather than importing
-// them from the syscall package as some syscall packages, even
-// on linux, for example gccgo, do not declare them.
-const ioctlReadTermios = 0x5401  // syscall.TCGETS
-const ioctlWriteTermios = 0x5402 // syscall.TCSETS
+import "golang.org/x/sys/unix"
+
+// The request numbers come from x/sys/unix, which declares the right value per
+// architecture instead of relying on one hand-copied pair per file. That also
+// fixes linux/mips and linux/ppc64, whose TCGETS is not 0x5401.
+const (
+	ioctlReadTermios  = unix.TCGETS
+	ioctlWriteTermios = unix.TCSETS
+)

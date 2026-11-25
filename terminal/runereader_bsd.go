@@ -8,7 +8,9 @@
 
 package terminal
 
-import "syscall"
+import "golang.org/x/sys/unix"
 
-const ioctlReadTermios = syscall.TIOCGETA
-const ioctlWriteTermios = syscall.TIOCSETA
+const (
+	ioctlReadTermios  = unix.TIOCGETA
+	ioctlWriteTermios = unix.TIOCSETA
+)
