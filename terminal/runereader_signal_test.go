@@ -50,6 +50,8 @@ func wantSignal(t *testing.T, name string) syscall.Signal {
 		return syscall.SIGTERM
 	case "SIGHUP":
 		return syscall.SIGHUP
+	case "SIGQUIT":
+		return syscall.SIGQUIT
 	}
 	t.Fatalf("unknown helper signal %q", name)
 	return 0
@@ -60,7 +62,7 @@ func wantSignal(t *testing.T, name string) syscall.Signal {
 // read on the terminal before it is signalled, so the restore cannot be coming
 // from the reading goroutine.
 func TestTermModeRestoredOnSignal(t *testing.T) {
-	for _, name := range []string{"SIGINT", "SIGTERM", "SIGHUP"} {
+	for _, name := range []string{"SIGINT", "SIGTERM", "SIGHUP", "SIGQUIT"} {
 		t.Run(name, func(t *testing.T) {
 			testTermModeRestoredOnSignal(t, name)
 		})
@@ -126,9 +128,19 @@ func testTermModeRestoredOnSignal(t *testing.T, sigName string) {
 	want := wantSignal(t, sigName)
 	status, ok := exitStatus(err)
 	if !ok {
-		t.Fatalf("helper process did not die from a signal (want %v): err=%v", want, err)
+		t.Fatalf("helper process did not terminate abnormally (want %v): err=%v", want, err)
 	}
-	if !status.Signaled() || status.Signal() != want {
+
+	if sigName == "SIGQUIT" {
+		// The Go runtime handles SIGQUIT itself. Our handler restores the
+		// terminal and stops listening, so the re-raised signal reaches the
+		// runtime, which prints the goroutine dump and exits with status 2
+		// rather than dying by the signal. The dump goes to the child's stderr,
+		// which this test shares, so the exit status is what pins the outcome.
+		if status.Signaled() || status.ExitStatus() != 2 {
+			t.Fatalf("helper process terminated with %v, want the runtime's SIGQUIT dump exit status 2", status)
+		}
+	} else if !status.Signaled() || status.Signal() != want {
 		t.Fatalf("helper process terminated with %v, want death by %v", status, want)
 	}
 
