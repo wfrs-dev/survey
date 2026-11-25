@@ -28,7 +28,7 @@ var simpleQs = []*survey.Question{
 }
 
 func main() {
-	ansmap := make(map[string]interface{})
+	ansmap := make(map[string]any)
 
 	// ask the question
 	err := survey.Ask(simpleQs, &ansmap)

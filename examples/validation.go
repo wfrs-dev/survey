@@ -18,7 +18,7 @@ var validationQs = []*survey.Question{
 	{
 		Name:   "valid",
 		Prompt: &survey.Input{Message: "Enter 'foo':", Default: "not foo"},
-		Validate: func(val interface{}) error {
+		Validate: func(val any) error {
 			// if the input matches the expectation
 			if str := val.(string); str != "foo" {
 				return fmt.Errorf("You entered %s, not 'foo'.", str)

@@ -78,7 +78,7 @@ func (r *Renderer) OffsetCursor(offset int) {
 	}
 }
 
-func (r *Renderer) Render(tmpl string, data interface{}) error {
+func (r *Renderer) Render(tmpl string, data any) error {
 	// cleanup the currently rendered text
 	lineCount := r.countLines(r.renderedText)
 	r.resetPrompt(lineCount)

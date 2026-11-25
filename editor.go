@@ -72,12 +72,12 @@ func init() {
 	}
 }
 
-func (e *Editor) PromptAgain(config *PromptConfig, invalid interface{}, err error) (interface{}, error) {
+func (e *Editor) PromptAgain(config *PromptConfig, invalid any, err error) (any, error) {
 	initialValue := invalid.(string)
 	return e.prompt(initialValue, config)
 }
 
-func (e *Editor) Prompt(config *PromptConfig) (interface{}, error) {
+func (e *Editor) Prompt(config *PromptConfig) (any, error) {
 	initialValue := ""
 	if e.Default != "" && e.AppendDefault {
 		initialValue = e.Default
@@ -85,7 +85,7 @@ func (e *Editor) Prompt(config *PromptConfig) (interface{}, error) {
 	return e.prompt(initialValue, config)
 }
 
-func (e *Editor) prompt(initialValue string, config *PromptConfig) (interface{}, error) {
+func (e *Editor) prompt(initialValue string, config *PromptConfig) (any, error) {
 	// render the template
 	err := e.Render(
 		EditorQuestionTemplate,
@@ -216,7 +216,7 @@ func (e *Editor) prompt(initialValue string, config *PromptConfig) (interface{},
 	return text, nil
 }
 
-func (e *Editor) Cleanup(config *PromptConfig, val interface{}) error {
+func (e *Editor) Cleanup(config *PromptConfig, val any) error {
 	return e.Render(
 		EditorQuestionTemplate,
 		EditorTemplateData{

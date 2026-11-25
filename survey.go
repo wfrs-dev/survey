@@ -95,14 +95,14 @@ type IconSet struct {
 // Validator is a function passed to a Question after a user has provided a response.
 // If the function returns an error, then the user will be prompted again for another
 // response.
-type Validator func(ans interface{}) error
+type Validator func(ans any) error
 
 // Transformer is a function passed to a Question after a user has provided a response.
 // The function can be used to implement a custom logic that will result to return
 // a different representation of the given answer.
 //
 // Look `TransformString`, `ToLower` `Title` and `ComposeTransformers` for more.
-type Transformer func(ans interface{}) (newAns interface{})
+type Transformer func(ans any) (newAns any)
 
 // Question is the core data structure for a survey questionnaire.
 type Question struct {
@@ -129,14 +129,14 @@ type PromptConfig struct {
 // Prompt is the primary interface for the objects that can take user input
 // and return a response.
 type Prompt interface {
-	Prompt(config *PromptConfig) (interface{}, error)
-	Cleanup(*PromptConfig, interface{}) error
+	Prompt(config *PromptConfig) (any, error)
+	Cleanup(*PromptConfig, any) error
 	Error(*PromptConfig, error) error
 }
 
 // PromptAgainer Interface for Prompts that support prompting again after invalid input
 type PromptAgainer interface {
-	PromptAgain(config *PromptConfig, invalid interface{}, err error) (interface{}, error)
+	PromptAgain(config *PromptConfig, invalid any, err error) (any, error)
 }
 
 // AskOpt allows setting optional ask options.
@@ -279,7 +279,7 @@ in the documentation. For example:
 
 	survey.AskOne(prompt, &name)
 */
-func AskOne(p Prompt, response interface{}, opts ...AskOpt) error {
+func AskOne(p Prompt, response any, opts ...AskOpt) error {
 	err := Ask([]*Question{{Prompt: p}}, response, opts...)
 	if err != nil {
 		return err
@@ -294,7 +294,7 @@ type can be one of two options. If a struct is passed, the answer will be writte
 the field whose name matches the Name field on the corresponding question. Field types
 should be something that can be casted from the response type designated in the
 documentation. Note, a survey tag can also be used to identify a Otherwise, a
-map[string]interface{} can be passed, responses will be written to the key with the
+map[string]any can be passed, responses will be written to the key with the
 matching name. For example:
 
 	qs := []*survey.Question{
@@ -311,7 +311,7 @@ matching name. For example:
 
 	err := survey.Ask(qs, &answers)
 */
-func Ask(qs []*Question, response interface{}, opts ...AskOpt) error {
+func Ask(qs []*Question, response any, opts ...AskOpt) error {
 	// build up the configuration options
 	options := defaultAskOptions()
 	for _, opt := range opts {
@@ -329,7 +329,7 @@ func Ask(qs []*Question, response interface{}, opts ...AskOpt) error {
 		return errors.New("cannot call Ask() with a nil reference to record the answers")
 	}
 
-	validate := func(q *Question, val interface{}) error {
+	validate := func(q *Question, val any) error {
 		if q.Validate != nil {
 			if err := q.Validate(val); err != nil {
 				return err
@@ -350,7 +350,7 @@ func Ask(qs []*Question, response interface{}, opts ...AskOpt) error {
 			p.WithStdio(options.Stdio)
 		}
 
-		var ans interface{}
+		var ans any
 		var validationErr error
 		// prompt and validation loop
 		for {
@@ -436,7 +436,7 @@ func paginate(pageSize int, choices []core.OptionAnswer, sel int) ([]core.Option
 }
 
 type IterableOpts interface {
-	IterateOption(int, core.OptionAnswer) interface{}
+	IterateOption(int, core.OptionAnswer) any
 }
 
 func computeCursorOffset(tmpl string, data IterableOpts, opts []core.OptionAnswer, idx, tWidth int) int {

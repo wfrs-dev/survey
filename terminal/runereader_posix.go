@@ -1,5 +1,4 @@
 //go:build darwin || dragonfly || freebsd || linux || netbsd || openbsd
-// +build darwin dragonfly freebsd linux netbsd openbsd
 
 // The terminal mode manipulation code is derived heavily from:
 // https://github.com/golang/crypto/blob/master/ssh/terminal/util.go:

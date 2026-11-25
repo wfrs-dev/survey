@@ -9,7 +9,7 @@ import (
 )
 
 // Required does not allow an empty value
-func Required(val interface{}) error {
+func Required(val any) error {
 	// the reflect value of the result
 	value := reflect.ValueOf(val)
 
@@ -24,7 +24,7 @@ func Required(val interface{}) error {
 // MaxLength requires that the string is no longer than the specified value
 func MaxLength(length int) Validator {
 	// return a validator that checks the length of the string
-	return func(val interface{}) error {
+	return func(val any) error {
 		if str, ok := val.(string); ok {
 			// if the string is longer than the given value
 			if len([]rune(str)) > length {
@@ -44,7 +44,7 @@ func MaxLength(length int) Validator {
 // MinLength requires that the string is longer or equal in length to the specified value
 func MinLength(length int) Validator {
 	// return a validator that checks the length of the string
-	return func(val interface{}) error {
+	return func(val any) error {
 		if str, ok := val.(string); ok {
 			// if the string is shorter than the given value
 			if len([]rune(str)) < length {
@@ -64,7 +64,7 @@ func MinLength(length int) Validator {
 // MaxItems requires that the list is no longer than the specified value
 func MaxItems(numberItems int) Validator {
 	// return a validator that checks the length of the list
-	return func(val interface{}) error {
+	return func(val any) error {
 		if list, ok := val.([]core.OptionAnswer); ok {
 			// if the list is longer than the given value
 			if len(list) > numberItems {
@@ -83,7 +83,7 @@ func MaxItems(numberItems int) Validator {
 // MinItems requires that the list is longer or equal in length to the specified value
 func MinItems(numberItems int) Validator {
 	// return a validator that checks the length of the list
-	return func(val interface{}) error {
+	return func(val any) error {
 		if list, ok := val.([]core.OptionAnswer); ok {
 			// if the list is shorter than the given value
 			if len(list) < numberItems {
@@ -102,7 +102,7 @@ func MinItems(numberItems int) Validator {
 // ComposeValidators is a variadic function used to create one validator from many.
 func ComposeValidators(validators ...Validator) Validator {
 	// return a validator that calls each one sequentially
-	return func(val interface{}) error {
+	return func(val any) error {
 		// execute each validator
 		for _, validator := range validators {
 			// if the answer's value is not valid

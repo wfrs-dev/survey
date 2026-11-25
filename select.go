@@ -23,7 +23,7 @@ type Select struct {
 	Renderer
 	Message       string
 	Options       []string
-	Default       interface{}
+	Default       any
 	Help          string
 	PageSize      int
 	VimMode       bool
@@ -52,7 +52,7 @@ type SelectTemplateData struct {
 }
 
 // IterateOption sets CurrentOpt and CurrentIndex appropriately so a select option can be rendered individually
-func (s SelectTemplateData) IterateOption(ix int, opt core.OptionAnswer) interface{} {
+func (s SelectTemplateData) IterateOption(ix int, opt core.OptionAnswer) any {
 	copy := s
 	copy.CurrentIndex = ix
 	copy.CurrentOpt = opt
@@ -216,7 +216,7 @@ func (s *Select) filterOptions(config *PromptConfig) []core.OptionAnswer {
 	return answers
 }
 
-func (s *Select) Prompt(config *PromptConfig) (interface{}, error) {
+func (s *Select) Prompt(config *PromptConfig) (any, error) {
 	// if there are no options to render
 	if len(s.Options) == 0 {
 		// we failed
@@ -313,7 +313,7 @@ func (s *Select) Prompt(config *PromptConfig) (interface{}, error) {
 	return options[0], err
 }
 
-func (s *Select) Cleanup(config *PromptConfig, val interface{}) error {
+func (s *Select) Cleanup(config *PromptConfig, val any) error {
 	cursor := s.NewCursor()
 	_ = cursor.Restore()
 	return s.Render(

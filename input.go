@@ -136,7 +136,7 @@ func (i *Input) onRune(config *PromptConfig) terminal.OnRuneFn {
 
 var errReadLineAgain = errors.New("read line again")
 
-func (i *Input) Prompt(config *PromptConfig) (interface{}, error) {
+func (i *Input) Prompt(config *PromptConfig) (any, error) {
 	// render the template
 	err := i.Render(
 		InputQuestionTemplate,
@@ -206,7 +206,7 @@ func (i *Input) Prompt(config *PromptConfig) (interface{}, error) {
 	return lineStr, err
 }
 
-func (i *Input) Cleanup(config *PromptConfig, val interface{}) error {
+func (i *Input) Cleanup(config *PromptConfig, val any) error {
 	return i.Render(
 		InputQuestionTemplate,
 		InputTemplateData{

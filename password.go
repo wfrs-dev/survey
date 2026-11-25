@@ -35,7 +35,7 @@ var PasswordQuestionTemplate = `
 {{- color "default+hb"}}{{ .Message }} {{color "reset"}}
 {{- if and .Help (not .ShowHelp)}}{{color "cyan"}}[{{ .Config.HelpInput }} for help]{{color "reset"}} {{end}}`
 
-func (p *Password) Prompt(config *PromptConfig) (interface{}, error) {
+func (p *Password) Prompt(config *PromptConfig) (any, error) {
 	// render the question template
 	userOut, _, err := core.RunTemplate(
 		PasswordQuestionTemplate,
@@ -101,6 +101,6 @@ func (p *Password) Prompt(config *PromptConfig) (interface{}, error) {
 }
 
 // Cleanup hides the string with a fixed number of characters.
-func (prompt *Password) Cleanup(config *PromptConfig, val interface{}) error {
+func (prompt *Password) Cleanup(config *PromptConfig, val any) error {
 	return nil
 }

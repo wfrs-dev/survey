@@ -63,12 +63,12 @@ type PromptTest struct {
 	name      string
 	prompt    Prompt
 	procedure func(expectConsole)
-	expected  interface{}
+	expected  any
 }
 
 func RunPromptTest(t *testing.T, test PromptTest) {
 	t.Helper()
-	var answer interface{}
+	var answer any
 	RunTest(t, test.procedure, func(stdio terminal.Stdio) error {
 		var err error
 		if p, ok := test.prompt.(wantsStdio); ok {
@@ -83,7 +83,7 @@ func RunPromptTest(t *testing.T, test PromptTest) {
 
 func RunPromptTestKeepFilter(t *testing.T, test PromptTest) {
 	t.Helper()
-	var answer interface{}
+	var answer any
 	RunTest(t, test.procedure, func(stdio terminal.Stdio) error {
 		var err error
 		if p, ok := test.prompt.(wantsStdio); ok {
@@ -99,7 +99,7 @@ func RunPromptTestKeepFilter(t *testing.T, test PromptTest) {
 
 func RunPromptTestRemoveSelectAll(t *testing.T, test PromptTest) {
 	t.Helper()
-	var answer interface{}
+	var answer any
 	RunTest(t, test.procedure, func(stdio terminal.Stdio) error {
 		var err error
 		if p, ok := test.prompt.(wantsStdio); ok {
@@ -115,7 +115,7 @@ func RunPromptTestRemoveSelectAll(t *testing.T, test PromptTest) {
 
 func RunPromptTestRemoveSelectNone(t *testing.T, test PromptTest) {
 	t.Helper()
-	var answer interface{}
+	var answer any
 	RunTest(t, test.procedure, func(stdio terminal.Stdio) error {
 		var err error
 		if p, ok := test.prompt.(wantsStdio); ok {
@@ -211,7 +211,7 @@ func TestAsk(t *testing.T) {
 		name      string
 		questions []*Question
 		procedure func(expectConsole)
-		expected  map[string]interface{}
+		expected  map[string]any
 	}{
 		{
 			"Test Ask for all prompts",
@@ -236,7 +236,7 @@ func TestAsk(t *testing.T) {
 						Editor:  "vi",
 						Message: "Edit git commit message",
 					},
-					Validate: func(v interface{}) error {
+					Validate: func(v any) error {
 						s := v.(string)
 						if strings.Contains(s, "invalid") {
 							return fmt.Errorf("invalid error message")
@@ -329,7 +329,7 @@ func TestAsk(t *testing.T) {
 				c.SendLine("yellow")
 				c.ExpectEOF()
 			},
-			map[string]interface{}{
+			map[string]any{
 				"pizza":          true,
 				"commit-message": "Add editor prompt tests\n",
 				/* TODO
@@ -362,7 +362,7 @@ func TestAsk(t *testing.T) {
 				c.SendLine("Johnny Appleseed")
 				c.ExpectEOF()
 			},
-			map[string]interface{}{
+			map[string]any{
 				"name": "Johnny Appleseed",
 			},
 		},
@@ -383,7 +383,7 @@ func TestAsk(t *testing.T) {
 				c.ExpectString("What is your name? johnny appleseed")
 				c.ExpectEOF()
 			},
-			map[string]interface{}{
+			map[string]any{
 				"name": "johnny appleseed",
 			},
 		},
@@ -393,7 +393,7 @@ func TestAsk(t *testing.T) {
 		// Capture range variable.
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			answers := make(map[string]interface{})
+			answers := make(map[string]any)
 			RunTest(t, test.procedure, func(stdio terminal.Stdio) error {
 				return Ask(test.questions, &answers, WithStdio(stdio.In, stdio.Out, stdio.Err))
 			})
@@ -613,7 +613,7 @@ func TestAsk_Validation(t *testing.T) {
 		{
 			Name:   "TLDN",
 			Prompt: p,
-			Validate: func(v interface{}) error {
+			Validate: func(v any) error {
 				s := v.(string)
 				if strings.ToLower(s) != s {
 					return errors.New("value contains uppercase characters")
@@ -650,7 +650,7 @@ type mockPrompt struct {
 	printedErrors []error
 }
 
-func (p *mockPrompt) Prompt(*PromptConfig) (interface{}, error) {
+func (p *mockPrompt) Prompt(*PromptConfig) (any, error) {
 	if p.index >= len(p.answers) {
 		return nil, errors.New("no more answers")
 	}
@@ -659,7 +659,7 @@ func (p *mockPrompt) Prompt(*PromptConfig) (interface{}, error) {
 	return val, nil
 }
 
-func (p *mockPrompt) Cleanup(*PromptConfig, interface{}) error {
+func (p *mockPrompt) Cleanup(*PromptConfig, any) error {
 	p.cleanups++
 	return nil
 }

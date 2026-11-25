@@ -120,7 +120,7 @@ by a carriage return.
 	prompt := &survey.Confirm{ Message: "What is your name?" }
 	survey.AskOne(prompt, &likesPie)
 */
-func (c *Confirm) Prompt(config *PromptConfig) (interface{}, error) {
+func (c *Confirm) Prompt(config *PromptConfig) (any, error) {
 	// render the question template
 	err := c.Render(
 		ConfirmQuestionTemplate,
@@ -138,7 +138,7 @@ func (c *Confirm) Prompt(config *PromptConfig) (interface{}, error) {
 }
 
 // Cleanup overwrite the line with the finalized formatted version
-func (c *Confirm) Cleanup(config *PromptConfig, val interface{}) error {
+func (c *Confirm) Cleanup(config *PromptConfig, val any) error {
 	// if the value was previously true
 	ans := yesNo(val.(bool))
 

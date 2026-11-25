@@ -12,12 +12,12 @@ import (
 // DisableColor can be used to make testing reliable
 var DisableColor = false
 
-var TemplateFuncsWithColor = map[string]interface{}{
+var TemplateFuncsWithColor = map[string]any{
 	// Templates with Color formatting. See Documentation: https://github.com/mgutz/ansi#style-format
 	"color": ansi.ColorCode,
 }
 
-var TemplateFuncsNoColor = map[string]interface{}{
+var TemplateFuncsNoColor = map[string]any{
 	// Templates without Color formatting. For layout/ testing.
 	"color": func(color string) string {
 		return ""
@@ -40,7 +40,7 @@ func envColorForced() bool {
 // user-facing output and may or may not contain ANSI escape codes
 // for colored output. The second string does not contain escape codes
 // and can be used by the renderer for layout purposes.
-func RunTemplate(tmpl string, data interface{}) (string, string, error) {
+func RunTemplate(tmpl string, data any) (string, string, error) {
 	tPair, err := GetTemplatePair(tmpl)
 	if err != nil {
 		return "", "", err

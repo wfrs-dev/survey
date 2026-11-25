@@ -14,7 +14,7 @@ const tagName = "survey"
 
 // Settable allow for configuration when assigning answers
 type Settable interface {
-	WriteAnswer(field string, value interface{}) error
+	WriteAnswer(field string, value any) error
 }
 
 // OptionAnswer is the return type of Selects/MultiSelects that lets the appropriate information
@@ -37,7 +37,7 @@ func OptionAnswerList(incoming []string) []OptionAnswer {
 	return list
 }
 
-func WriteAnswer(t interface{}, name string, v interface{}) (err error) {
+func WriteAnswer(t any, name string, v any) (err error) {
 	// if the field is a custom type
 	if s, ok := t.(Settable); ok {
 		// use the interface method
@@ -111,7 +111,7 @@ func WriteAnswer(t interface{}, name string, v interface{}) (err error) {
 		if mapType.Elem().Kind() != reflect.Interface {
 			return errors.New("answer maps must be of type map[string]interface")
 		}
-		mt := *t.(*map[string]interface{})
+		mt := *t.(*map[string]any)
 		mt[name] = value.Interface()
 		return nil
 	}
@@ -233,7 +233,7 @@ func copy(t reflect.Value, v reflect.Value) (err error) {
 
 	// if we are copying from a string result to something else
 	if v.Kind() == reflect.String && v.Type() != t.Type() {
-		var castVal interface{}
+		var castVal any
 		var casterr error
 		vString := v.Interface().(string)
 
