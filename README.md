@@ -1,14 +1,54 @@
 # Survey
 
+[![Built with Gentle-AI](https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/docs/assets/brand/built-with-gentle-ai.png)](https://github.com/Gentleman-Programming/gentle-ai)
+
 [![GoDoc](http://img.shields.io/badge/godoc-reference-5272B4.svg)](https://pkg.go.dev/github.com/wfrs-dev/survey/v2)
 
 A library for building interactive and accessible prompts on terminals supporting ANSI escape sequences.
 
-⚠️ This project is no longer maintained. For an alternative, please check out: https://github.com/charmbracelet/bubbletea ⚠️
+This is a maintained fork of [AlecAivazis/survey](https://github.com/AlecAivazis/survey). Upstream was archived by its author in April 2024, and this fork is the line that receives fixes and dependency updates. The original library, its API and its documentation are the work of [Alec Aivazis](https://github.com/AlecAivazis) and the project's contributors.
 
-Hey everyone! I finally came to terms with the fact that I can no longer dedicate enough time to keep this library alive. 
-This project outgrew my wildest expectations and was such a great experience. If someone else wants to take over maintainence,
-please reach out
+The module path is `github.com/wfrs-dev/survey/v2`. If you need the upstream import path, use the upstream repository.
+
+## Why this fork exists
+
+The upstream library is small and good at one thing: asking questions in a terminal. The reason for forking is to keep it usable on current Go, not to redesign it. The API is unchanged; what changed is the maintenance. That is also why this fork was chosen over heavier alternatives such as [Bubble Tea](https://github.com/charmbracelet/bubbletea), which solves a different problem.
+
+### What changed in this fork
+
+| Area | Change |
+|------|--------|
+| Go | Module path `github.com/wfrs-dev/survey/v2`, minimum Go raised from 1.13 to **1.23** |
+| Dependencies | Every direct dependency refreshed: `x/text` v0.28.0, `x/term` v0.34.0, `x/sys` v0.35.0, `testify` v1.12.1, `isatty` v0.0.24, `colorable` v0.1.16, `pty` v1.1.24, `vt10x` 2022-03 |
+| Terminal | An interruption (SIGINT, SIGTERM, SIGHUP or SIGQUIT) now restores the terminal instead of leaving it in raw mode; the ioctls go through `golang.org/x/sys/unix` instead of hand-copied request numbers |
+| Correctness | A prompt's editor no longer leaks into the package-wide default; the wrong `TCGETS` number used on linux/mips and linux/ppc64 is fixed |
+| Tests | The editor test no longer hangs on a real `vi`/Neovim, the pty harness fails instead of blocking forever, and `Title`'s casing is pinned |
+| CI | Actions pinned by commit SHA, Go matrix `1.23` + `stable`, gates for `gofmt`, `go vet`, the ignored example programs, the race detector and `golangci-lint`; dependabot; tag-driven releases |
+| Style | `interface{}` → `any`, legacy `// +build` lines removed, `io/ioutil` → `os` |
+
+### Development tooling
+
+From this fork onwards, the work is driven with **Gentle Shell**, the agent harness from the [gentle-ai](https://github.com/Gentleman-Programming/gentle-ai) project — the badge at the top of this file comes from there. That is a statement about how the fork is maintained, not about the library: `survey` has no dependency on it, and nothing in the module or its tests needs the harness to build or run.
+
+### Help wanted: macOS
+
+macOS is **not** covered by this fork's CI, and bringing it back is the most useful contribution right now. It was removed for two reasons that have nothing to do with the code:
+
+1. Go older than 1.24 links Mach-O binaries without an `LC_UUID` load command, and the current macOS runner image refuses to load them (`dyld: missing LC_UUID load command` → `signal: abort trap`).
+2. The macOS jobs on this repository were repeatedly cancelled after roughly fifteen minutes without ever starting, for lack of runner capacity. A cancelled job is reported as a failing check, so a green commit looked broken.
+
+What would help: a macOS runner that reliably starts, or a documented workflow that avoids the `LC_UUID` trap. `-ldflags=-B gobuildid` does work on the go1.23 backport, but it was rejected as a permanent matrix flag because it would hide future regressions of the same kind.
+
+In the meantime, you can check this fork on a Mac by hand:
+
+```sh
+go test -count=1 ./...
+go test -race -count=1 ./...
+go vet ./... && test -z "$(gofmt -l .)"
+for f in examples/*.go tests/*.go; do go build -o /dev/null "$f"; done
+```
+
+Those example and manual-test programs are `//go:build ignore` mains, so neither `go vet ./...` nor `go test ./...` looks at them. An issue or a pull request with the result is welcome even if you only ran the commands.
 
 
 <img width="550" src="https://thumbs.gfycat.com/VillainousGraciousKouprey-size_restricted.gif"/>
